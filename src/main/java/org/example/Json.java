@@ -13,11 +13,13 @@ public class Json {
     static void listSouvenirsToJsonFile(File file, List<Souvenir> list) throws IOException {
         objectMapper.writeValue(file, list);
         System.out.println("Список сувениров записан в файл");
+        System.out.println(" ");
     }
 
     static void listManufacturersToJsonFile(File file, List<Manufacturer> list) throws IOException {
         objectMapper.writeValue(file, list);
         System.out.println("Список производителей записан в файл");
+        System.out.println(" ");
     }
 
     static List<Souvenir> fileToListOfSouvenirs(File file) throws IOException {

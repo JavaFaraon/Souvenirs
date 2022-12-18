@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Main {
     static final File fileSouvenirs = new File("C:\\Users\\User\\IdeaProjects\\Souvenirs\\souvenirs.json");
@@ -117,8 +118,6 @@ public class Main {
         }
     }
 
-
-
     private static void viewAndEditOrDeleteSouvenir(File fileSouvenirs, File fileManufacturers) throws IOException {
         List<Souvenir> souvenirList = Json.fileToListOfSouvenirs(fileSouvenirs);
         int souvenirID = choiceOfSouvenir(fileSouvenirs);
@@ -181,7 +180,14 @@ public class Main {
                 System.out.println(nextSouvenir);
                 souvenirIterator.remove();
                 }
-        }
+            }
+            for (Souvenir souvenir : souvenirList) {
+                if(Objects.equals(souvenir.getManufacturer(), manufacturer)) {
+                    System.out.println(souvenir);
+                }
+            }
+            souvenirList.removeIf(souvenir -> souvenir.getManufacturer().equals(manufacturer)); //так симпатичнее
+
             Json.listSouvenirsToJsonFile(fileSouvenirs, souvenirList);
             System.out.println("Удален производитель:  " + manufacturerList.get(manufacturerID));
             manufacturerList.remove(manufacturerID);
@@ -304,13 +310,21 @@ public class Main {
         List<Souvenir> souvenirList = Json.fileToListOfSouvenirs(fileSouvenirs);
         System.out.println("Введите заданную цену:");
         double givenPrice = inputPrice();
-        HashSet<ManufacturerInterface> manufacturersSet = new HashSet<>();
+        Set<ManufacturerInterface> manufacturersSet;
         System.out.println("Список производителей, имеющих сувениры дешевле '" + givenPrice + "':");
-        for (Souvenir souvenir : souvenirList) {
-                if (souvenir.getSouvenirPrice() < givenPrice){
-                manufacturersSet.add(souvenir.getManufacturer());
-            }
-        }
+
+        //Вариамт без стрима:
+//        for (Souvenir souvenir : souvenirList) {
+//                if (souvenir.getSouvenirPrice() < givenPrice){
+//                manufacturersSet.add(souvenir.getManufacturer());
+//            }
+//        }
+
+        //Вариант со стримом:
+
+        manufacturersSet = souvenirList.stream().filter(souvenir -> souvenir.getSouvenirPrice() < givenPrice)
+                .map(Souvenir::getManufacturer).collect(Collectors.toSet());
+
         for (ManufacturerInterface manufacturer : manufacturersSet) {
             System.out.println(manufacturer);
         }
@@ -323,16 +337,32 @@ public class Main {
 
     private static void sortByManufacturersListOfSouvenirs(File fileSouvenirs, File fileManufacturers) throws IOException {
         List<Souvenir> souvenirList = Json.fileToListOfSouvenirs(fileSouvenirs);
-        List<Manufacturer> manufacturerList = Json.fileToListOfManufacturers(fileManufacturers);
-        for (Manufacturer manufacturer : manufacturerList) {
-            System.out.println(manufacturer);
-            for (Souvenir souvenir : souvenirList) {
-                if (Objects.equals(souvenir.getManufacturer(), manufacturer)) {
-                    System.out.print("    ---");
-                    System.out.println(souvenir);
-                }
+
+        //Вариант без стримов:
+
+//        List<Manufacturer> manufacturerList = Json.fileToListOfManufacturers(fileManufacturers);
+//        for (Manufacturer manufacturer : manufacturerList) {
+//            System.out.println(manufacturer);
+//            for (Souvenir souvenir : souvenirList) {
+//                if (Objects.equals(souvenir.getManufacturer(), manufacturer)) {
+//                    System.out.print("    ---");
+//                    System.out.println(souvenir);
+//                }
+//            }
+//        }
+
+        //Вариант со стримом: (не уверен какой мне больше нравиться. Со стримом, конечно красиво, но с учётом красивого,
+        // читабельного вывода, код получается не меньше)
+        Map<ManufacturerInterface, List<Souvenir>> souvenirMapSortedByManufacturer = souvenirList.stream()
+                .collect(Collectors.groupingBy(Souvenir::getManufacturer));
+        for (ManufacturerInterface manufacturerInterface : souvenirMapSortedByManufacturer.keySet()) {
+            List<Souvenir> s = souvenirMapSortedByManufacturer.get(manufacturerInterface);
+            System.out.println(manufacturerInterface);
+            for (Souvenir souvenir : s) {
+                System.out.println("----- " + souvenir);
             }
         }
+
         System.out.println("\nЖелаете выполнить ещё что-то? Y/N");
         if(yesOrNo()) {
             choiceOfAction(fileSouvenirs, fileManufacturers);
@@ -341,19 +371,35 @@ public class Main {
 
     private static void sortByYearsListOfSouvenirs(File fileSouvenirs, File fileManufacturers) throws IOException {
         List<Souvenir> souvenirList = Json.fileToListOfSouvenirs(fileSouvenirs);
-        HashSet<LocalDate> years = new HashSet<>();
-        for (Souvenir souvenir : souvenirList) {
-            years.add(souvenir.getDateOfManufacturing());
-        }
-        for (LocalDate year : years) {
-            System.out.println(year);
-            for (Souvenir souvenir : souvenirList) {
-                if (Objects.equals(souvenir.getDateOfManufacturing(), year)) {
-                    System.out.print("    ---");
-                    System.out.println(souvenir);
-                }
+
+        //Вариант без стримов:
+
+//        HashSet<LocalDate> years = new HashSet<>();
+//        for (Souvenir souvenir : souvenirList) {
+//            years.add(souvenir.getDateOfManufacturing());
+//        }
+//        for (LocalDate year : years) {
+//            System.out.println(year);
+//            for (Souvenir souvenir : souvenirList) {
+//                if (Objects.equals(souvenir.getDateOfManufacturing(), year)) {
+//                    System.out.print("    ---");
+//                    System.out.println(souvenir);
+//                }
+//            }
+//        }
+
+        // Вариант со стримом:
+
+        Map<LocalDate, List<Souvenir>> souvenirMapSortedByLocalDate = souvenirList.stream()
+                .collect(Collectors.groupingBy(Souvenir::getDateOfManufacturing));
+        for (LocalDate localDate : souvenirMapSortedByLocalDate.keySet()) {
+            List<Souvenir> s = souvenirMapSortedByLocalDate.get(localDate);
+            System.out.println(localDate);
+            for (Souvenir souvenir : s) {
+                System.out.println("---- " + souvenir);
             }
         }
+
         System.out.println("\nЖелаете выполнить ещё что-то? Y/N");
         if(yesOrNo()) {
             choiceOfAction(fileSouvenirs, fileManufacturers);
@@ -509,7 +555,7 @@ public class Main {
 
     private static void deleteSouvenir(int souvenirID, File fileSouvenirs, File fileManufacturers) throws IOException {
         List<Souvenir> souvenirList = Json.fileToListOfSouvenirs(fileSouvenirs);
-        System.out.println("Вы уверены, что хотите удалить производителя? Y/N");
+        System.out.println("Вы уверены, что хотите удалить сувенир? Y/N");
         if(yesOrNo()) {
             System.out.println("Удален сувенир:  " + souvenirList.get(souvenirID));
             souvenirList.remove(souvenirID);
