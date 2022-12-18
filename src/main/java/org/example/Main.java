@@ -310,10 +310,9 @@ public class Main {
         List<Souvenir> souvenirList = Json.fileToListOfSouvenirs(fileSouvenirs);
         System.out.println("Введите заданную цену:");
         double givenPrice = inputPrice();
-        Set<ManufacturerInterface> manufacturersSet;
         System.out.println("Список производителей, имеющих сувениры дешевле '" + givenPrice + "':");
 
-        //Вариамт без стрима:
+        //Вариант без стрима:
 //        for (Souvenir souvenir : souvenirList) {
 //                if (souvenir.getSouvenirPrice() < givenPrice){
 //                manufacturersSet.add(souvenir.getManufacturer());
@@ -322,7 +321,7 @@ public class Main {
 
         //Вариант со стримом:
 
-        manufacturersSet = souvenirList.stream().filter(souvenir -> souvenir.getSouvenirPrice() < givenPrice)
+        Set<ManufacturerInterface> manufacturersSet = souvenirList.stream().filter(souvenir -> souvenir.getSouvenirPrice() < givenPrice)
                 .map(Souvenir::getManufacturer).collect(Collectors.toSet());
 
         for (ManufacturerInterface manufacturer : manufacturersSet) {
